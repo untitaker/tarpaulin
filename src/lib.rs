@@ -17,6 +17,8 @@ extern crate serde_json;
 extern crate quick_xml;
 extern crate regex;
 extern crate walkdir;
+#[macro_use]
+extern crate horrorshow;
 
 use std::env;
 use std::io;
@@ -69,11 +71,11 @@ pub fn launch_tarpaulin(config: &Config) -> Result<(TraceMap, bool), i32> {
     };
     // This shouldn't fail so no checking the error.
     let _ = cargo_config.configure(0u32, flag_quiet, &None, false, false, &[]);
-    
+
     let workspace = Workspace::new(config.manifest.as_path(), &cargo_config).map_err(|_| 1i32)?;
-    
+
     setup_environment();
-        
+
     let mut copt = ops::CompileOptions::default(&cargo_config, ops::CompileMode::Test);
     if let ops::CompileFilter::Default{ref mut required_features_filterable} = copt.filter {
         *required_features_filterable = true;
@@ -82,7 +84,7 @@ pub fn launch_tarpaulin(config: &Config) -> Result<(TraceMap, bool), i32> {
     copt.all_features = config.all_features;
     copt.spec = match ops::Packages::from_flags(workspace.is_virtual(), config.all, &config.exclude, &config.packages) {
         Ok(spec) => spec,
-        Err(e) => { 
+        Err(e) => {
             println!("Error getting Packages from workspace {}", e);
             return Err(-1)
         }
@@ -209,7 +211,7 @@ pub fn report_coverage(config: &Config, result: &TraceMap) {
         }
         let percent = result.coverage_percentage() * 100.0f64;
         // Put file filtering here
-        println!("\n{:.2}% coverage, {}/{} lines covered", percent, 
+        println!("\n{:.2}% coverage, {}/{} lines covered", percent,
                  result.total_covered(), result.total_coverable());
         if config.is_coveralls() {
             report::coveralls::export(result, config);
@@ -220,6 +222,9 @@ pub fn report_coverage(config: &Config, result: &TraceMap) {
             match *g {
                 OutputFile::Xml => {
                     report::cobertura::export(result, config);
+                },
+                OutputFile::Html => {
+                    report::html_report::export(result, config);
                 },
                 _ => {
                     println!("Format currently unsupported");
@@ -233,14 +238,14 @@ pub fn report_coverage(config: &Config, result: &TraceMap) {
 }
 
 /// Returns the coverage statistics for a test executable in the given workspace
-pub fn get_test_coverage(project: &Workspace, 
+pub fn get_test_coverage(project: &Workspace,
                          package: &Package,
-                         test: &Path, 
-                         config: &Config, 
+                         test: &Path,
+                         config: &Config,
                          ignored: bool) -> Option<(TraceMap, bool)> {
     if !test.exists() {
         return None;
-    } 
+    }
     match fork() {
         Ok(ForkResult::Parent{ child }) => {
             match collect_coverage(project, test, child, config) {
@@ -258,7 +263,7 @@ pub fn get_test_coverage(project: &Workspace,
             execute_test(test, package, ignored, config);
             None
         }
-        Err(err) => { 
+        Err(err) => {
             println!("Failed to run {}", test.display());
             println!("Error {}", err);
             None
@@ -268,8 +273,8 @@ pub fn get_test_coverage(project: &Workspace,
 }
 
 /// Collects the coverage data from the launched test
-fn collect_coverage(project: &Workspace, 
-                    test_path: &Path, 
+fn collect_coverage(project: &Workspace,
+                    test_path: &Path,
                     test: Pid,
                     config: &Config) -> io::Result<(TraceMap, bool)> {
     let mut test_passed = false;
@@ -304,11 +309,13 @@ fn execute_test(test: &Path, package: &Package, ignored: bool, config: &Config) 
         Err(e) => println!("ASLR disable failed: {}", e),
     }
     request_trace().expect("Failed to trace");
-    println!("running {}", test.display());
+    if config.verbose {
+        println!("running {}", test.display());
+    }
     if let Some(parent) = package.manifest_path().parent() {
         let _ = env::set_current_dir(parent);
     }
-    
+
     let mut envars: Vec<CString> = vec![CString::new("RUST_TEST_THREADS=1").unwrap()];
     for (key, value) in env::vars() {
         let mut temp = String::new();
