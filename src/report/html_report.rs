@@ -1,4 +1,6 @@
+use std::collections::HashSet;
 use std::fs::File;
+use std::path::Path;
 use std::io::prelude::*;
 
 use horrorshow::RenderBox;
@@ -8,6 +10,50 @@ use horrorshow::prelude::*;
 use config::Config;
 use traces::TraceMap;
 
+
+#[derive(Eq, PartialEq, Clone, Copy, Ord, PartialOrd, Hash)]
+struct CoverageRow<'a> {
+    path: &'a Path,
+    depth: usize,
+    line_coverage: usize,
+    hit_rate: usize,
+}
+
+fn get_entries(res:&TraceMap) -> Vec<CoverageRow> {
+    vec![]
+}
+
+
+fn render_results(res: &TraceMap) -> Box<RenderBox> {
+    if res.is_empty() {
+        box_html! {
+            p {
+                :"No coverage results to show"
+            }
+        }
+    } else {
+        box_html! {
+            table(class="table table-striped") {
+                thead {
+                    tr {
+                        th { :"Item" }
+                        th { :"Line Coverage" }
+                        th { :"Hit Rate" }
+                    }
+                }
+                tbody {
+                    @ for r in get_entries(res){
+                        tr {
+                            td{:r.path.display()}
+                            td{:format!("{}%", r.line_coverage)}
+                            td{:format!("{}", r.hit_rate)}
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
 
 pub fn export(coverage_data: &TraceMap, config: &Config) {
     let report = html! {
@@ -49,7 +95,7 @@ pub fn export(coverage_data: &TraceMap, config: &Config) {
                         :"Coverage Results"
                     }
                     p {
-                        render_results(coverage_data)
+                        : render_results(coverage_data)
                     }
                 }
             }
