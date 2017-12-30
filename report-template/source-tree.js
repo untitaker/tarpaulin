@@ -8,7 +8,7 @@
 
         this.setPath(this.options.currentPath);
 
-        this.item.find(".st-list .list-group a").on("click", function(e) {
+        this.item.find(".st-list .list-group-item").on("click", function(e) {
             if($(this).attr("data-st-dir")) {
                 let dir = $(this).attr("data-st-dir");
 
