@@ -3,8 +3,10 @@ use std::env;
 use std::time::Duration;
 use std::str::FromStr;
 use clap::ArgMatches;
-use coveralls_api::CiService;
 use regex::Regex;
+
+pub use coveralls_api::CiService;
+
 
 arg_enum!{
     /// Enum to represent possible output formats.
