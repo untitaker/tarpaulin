@@ -1,9 +1,10 @@
+use std::error;
+use std::fmt;
 use std::path::{Path, PathBuf};
 
-use chrono::offset::Utc;
+use chrono::offset::{Utc};
 
-use config::Config;
-use report::types::{self, Report};
+use config::{Config};
 use traces::{CoverageStat, Trace, TraceMap};
 
 
@@ -47,7 +48,39 @@ use traces::{CoverageStat, Trace, TraceMap};
 
 
 #[derive(Debug)]
-struct CoberturaReport {
+pub enum Error {
+    Unknown,
+}
+
+impl error::Error for Error {
+
+    #[inline]
+    fn description(&self) -> &str {
+        match self {
+            Error::Unknown => "Unknown Error",
+        }
+    }
+
+    #[inline]
+    fn cause(&self) -> Option<&error::Error> {
+        None
+    }
+}
+
+
+impl fmt::Display for Error {
+
+    #[inline]
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            Error::Unknown => write!(f, "Unknown Error")
+        }
+    }
+}
+
+
+#[derive(Debug)]
+pub struct Report {
     timestamp:      i64,
     line_rate:      f64,
     branch_rate:    f64,
@@ -55,9 +88,9 @@ struct CoberturaReport {
     packages:       Vec<Package>,
 }
 
-impl Report for CoberturaReport {
+impl Report {
 
-    fn render(config: &Config, traces: &TraceMap) -> types::Result<Self> {
+    fn render(config: &Config, traces: &TraceMap) -> Result<Self, Error> {
         let timestamp   = Utc::now().timestamp();
         let sources     = render_sources(config);
         let packages    = render_packages(config, traces);
@@ -72,7 +105,7 @@ impl Report for CoberturaReport {
                 .map(|x| x.branch_rate).sum() / packages.len() as f64;
         }
 
-        Ok(CoberturaReport {
+        Ok(Report {
             timestamp:      timestamp,
             line_rate:      line_rate,
             branch_rate:    branch_rate,
@@ -81,8 +114,9 @@ impl Report for CoberturaReport {
         })
     }
 
-    fn export(&self, config: &Config) {
+    fn export(&self, config: &Config) -> Result<(), Error> {
         // TODO: Convert the report structure to XML and write to file
+        panic!("Not implemented")
     }
 }
 

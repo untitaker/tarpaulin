@@ -3,17 +3,15 @@ extern crate chrono;
 #[macro_use]
 extern crate clap;
 extern crate coveralls_api;
+extern crate curl;
 extern crate fallible_iterator;
 extern crate gimli;
-#[macro_use]
-extern crate horrorshow;
 #[macro_use]
 extern crate lazy_static;
 extern crate memmap;
 extern crate nix;
 extern crate object;
 extern crate proc_macro2;
-extern crate quick_xml;
 extern crate regex;
 extern crate rustc_demangle;
 extern crate serde;
@@ -22,6 +20,8 @@ extern crate serde_derive;
 extern crate serde_json;
 extern crate syn;
 extern crate syntex_syntax;
+#[macro_use]
+extern crate tera;
 extern crate walkdir;
 
 
@@ -38,7 +38,7 @@ use nix::unistd::*;
 
 pub mod breakpoint;
 pub mod config;
-pub mod report;
+pub mod reporting;
 pub mod test_loader;
 pub mod traces;
 
@@ -54,7 +54,6 @@ use ptrace_control::*;
 use statemachine::*;
 use test_loader::*;
 use traces::*;
-
 
 
 pub fn run(config: &Config) -> Result<(), i32> {

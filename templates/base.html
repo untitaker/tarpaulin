@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,shrink-to-fit=no">
+
+  <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.2.0/css/all.css" integrity="sha384-hWVjflwFxL6sNzntih27bfxkr27PmbbK/iSvJ+a4+0owXq79v+lsFkW54bOGbiDQ" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.15.0/themes/prism.min.css" integrity="sha256-N1K43s+8twRa+tzzoF3V8EgssdDiZ6kd9r8Rfgg8kZU=" crossorigin="anonymous">
+</head>
+<body>
+  <!-- Heading -->
+  <section class="jumbotron">
+    <div class="container">
+      <h1 class="display-4">Tarpaulin Coverage Report</h1>
+      <p class="lead">Generated 2017-10-18 22:29</p>
+    </div>
+  </section>
+
+  <!-- Summary -->
+  <section class="container pb-4">
+    <div class="row justify-content-between">
+      <div class="col">
+        <h2 class="display-5">Summary</h2>
+      </div>
+      <div class="col-3">
+        <button class="btn btn-link float-right"
+            type="button"
+            data-toggle="collapse"
+            data-target=".multi-collapse"
+            aria-expanded="false"
+            aria-controls="dt-summary-ro dd-summary-ro">
+          Toggle Run Options
+        </button>
+      </div>
+    </div>
+    <hr/>
+    <dl class="row">
+      <dt class="col-2">Project</dt>
+      <dd class="col-10">Simple Project</dd>
+      <dt class="col-2">Manifest</dt>
+      <dd class="col-10">/home/xd009642/code/rust/tarpaulin/tests/data/simple_project/Cargo.toml</dd>
+      <dt id="dt-summary-ro" class="col-2 collapse multi-collapse">Run Options</dt>
+      <dd id="dd-summary-ro" class="col-10 collapse multi-collapse">Foo</dd>
+    </dl>
+  </section>
+
+  <!-- Modules -->
+  <section class="container pb-4">
+    <div class="row">
+      <div class="col">
+        <h2 class="display-5">Source Tree</h2>
+      </div>
+    </div>
+    <hr>
+    <div id="source-tree" class="row">
+      <nav class="col st-path" role="navigation" aria-label="breadcrumb">
+        <ol class="breadcrumb"/>
+      </nav>
+      <div class="w-100"/>
+      <div class="col st-list">
+        <div class="list-group">
+          {% for file in files %}
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Coverage Info -->
+  <section class="container pb-4">
+    <div class="row">
+      <div class="col">
+        <h2 class="display-5">Coverage Info</h5>
+      </div>
+    </div>
+    <hr>
+    <div class="row">
+      <div id="coverage" class="col">
+        {% for file in files %}
+        {% endfor %}
+      </div>
+    </div>
+  </section>
+
+  <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha256-3edrmyuQ0w65f8gfBsqowzjJe2iM6n0nKciPUp8y+7E=" crossorigin="anonymous"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js" integrity="sha384-ChfqqxuZUCnJSK3+MXmPNIyE6ZbWh2IMqE241rYiqJxyMiZ6OW/JmZQ5stwEULTy" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.15.0/prism.min.js" integrity="sha256-jc6y1s/Y+F+78EgCT/lI2lyU7ys+PFYrRSJ6q8/R8+o=" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.15.0/components/prism-rust.min.js" integrity="sha256-NpBHShkm7o+DlVm/qeJtqQGJhVgh4BydBbNvW9Zs3yA=" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.15.0/plugins/show-language/prism-show-language.min.js" integrity="sha256-ixzT6QAFdpaQSTvcrSmo2AGsctroVxEPYmKDwb2Cp+Q=" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.15.0/plugins/normalize-whitespace/prism-normalize-whitespace.min.js" integrity="sha256-31Ef0tfMJHz4mcBYno6PKR2Iz5qPHPJLxIzej2AGl6c=" crossorigin="anonymous"></script>
+
+  <script>
+    {% include "source-tree.js" %}
+  </script>
+</body>
+</html>
+
