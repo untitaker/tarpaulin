@@ -155,92 +155,20 @@ fn setup_environment() {
     env::set_var(rustflags, value);
 }
 
-fn accumulate_lines((mut acc, mut group): (Vec<String>, Vec<u64>), next: u64) -> (Vec<String>, Vec<u64>) {
-    if let Some(last) = group.last().cloned() {
-        if next == last + 1 {
-            group.push(next);
-            (acc, group)
-        } else {
-            match (group.first(), group.last()) {
-                (Some(first), Some(last)) if first == last => {
-                    acc.push(format!("{}", first));
-                },
-                (Some(first), Some(last)) => {
-                    acc.push(format!("{}-{}", first, last));
-                },
-                (Some(_), None) |
-                (None, _) => (),
-            };
-            (acc, vec![next])
-        }
-    } else {
-        group.push(next);
-        (acc, group)
-    }
-}
-
 /// Reports the test coverage using the users preferred method. See config.rs
 /// or help text for details.
 pub fn report_coverage(config: &Config, result: &TraceMap) {
+    reporting::stdout::report(config, result);
+
     if !result.is_empty() {
-        println!("Coverage Results");
-        if config.verbose {
-
-            println!();
-            println!("Uncovered Lines:");
-            for (ref key, ref value) in result.iter() {
-                let path = config.strip_project_path(key);
-                let mut uncovered_lines = vec![];
-                for v in value.iter() {
-                    match v.stats {
-                        traces::CoverageStat::Line(count) if count == 0 => {
-                            uncovered_lines.push(v.line);
-                        },
-                        _ => (),
-                    }
-                }
-                uncovered_lines.sort();
-                let (groups, last_group) =
-                    uncovered_lines.into_iter()
-                    .fold((vec![], vec![]), accumulate_lines);
-                let (groups, _) = accumulate_lines((groups, last_group), u64::max_value());
-                if ! groups.is_empty() {
-                    println!("{}: {}", path.display(), groups.join(", "));
-                }
-            }
-            println!();
-        }
-        println!("Tested/Total Lines:");
-        for file in result.files() {
-            let path = config.strip_project_path(file);
-            println!("{}: {}/{}", path.display(), result.covered_in_path(&file), result.coverable_in_path(&file));
-        }
-        let percent = result.coverage_percentage() * 100.0f64;
-        // Put file filtering here
-        println!("\n{:.2}% coverage, {}/{} lines covered", percent,
-                 result.total_covered(), result.total_coverable());
-        if config.is_coveralls() {
-            report::coveralls::export(result, config);
-            println!("Coverage data sent");
-        }
-
         for g in &config.generate {
             match *g {
-                OutputFile::Xml => {
-                    report::cobertura::export(result, config);
-                },
-                OutputFile::Html => {
-                    report::html_report::export(result, config);
-                },
-                _ => {
-                    println!("Format currently unsupported");
-                },
+                OutputFile::Xml     => println!("Render XML"),
+                OutputFile::Html    => println!("Render HTML"),
+                _                   => println!("Render Unsupported Type")
             }
         }
-    } else {
-        println!("No coverage results collected.");
     }
-
 }
 
 /// Returns the coverage statistics for a test executable in the given workspace

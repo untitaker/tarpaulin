@@ -11,7 +11,7 @@ use traces::{TraceMap, CoverageStat};
 
 
 fn get_coveralls_id(config: &Config) -> Result<Identity, Error> {
-    let key = config.coveralls.ok_or(Error::NoKey)?;
+    let key = config.coveralls.clone().ok_or(Error::NoKey)?;
 
     Ok(match config.ci_tool {
         Some(ref service)   =>
@@ -63,7 +63,7 @@ impl Report {
         Ok(Report { report: report })
     }
 
-    pub fn export(&self, config: &Config) -> Result<(), Error> {
+    pub fn export(&mut self, config: &Config) -> Result<(), Error> {
         match config.report_uri {
             Some(ref uri)   => {
                 println!("Sending report to {}", uri);
@@ -90,7 +90,7 @@ impl error::Error for Error {
     #[inline]
     fn description(&self) -> &str {
         match self {
-            Error::Export(e)    => "Could Not Export Report",
+            Error::Export(e)    => e.description(),
             Error::NoKey        => "No Coveralls Key Provided",
         }
     }

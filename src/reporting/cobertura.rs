@@ -97,13 +97,14 @@ impl Report {
         let line_rate   = 0.0;
         let branch_rate = 0.0;
 
+        /*
         if packages.len() > 0 {
             line_rate   = packages.iter()
                 .map(|x| x.line_rate).sum() / packages.len() as f64;
-
             branch_rate = packages.iter()
                 .map(|x| x.branch_rate).sum() / packages.len() as f64;
         }
+        */
 
         Ok(Report {
             timestamp:      timestamp,
