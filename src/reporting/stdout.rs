@@ -13,17 +13,17 @@ pub fn report(config: &Config, traces: &TraceMap) -> io::Result<()> {
     let mut handle = stdout.lock();
 
     if !traces.is_empty() {
-        handle.write(b"Coverage Results\n\n")?;
+        writeln!(handle, "Coverage Results\n")?;
 
         if config.verbose {
             report_verbose(&mut handle, config, traces)?;
         }
 
-        handle.write(b"Tested / Total Lines:\n")?;
+        writeln!(handle, "Tested / Total Lines:")?;
 
         for file in traces.files() {
             let path = config.strip_project_path(file);
-            write!(&mut handle, "{}: {}/{}\n",
+            writeln!(handle, "{}: {}/{}",
                 path.display(),
                 traces.covered_in_path(&file),
                 traces.coverable_in_path(&file)
@@ -34,14 +34,14 @@ pub fn report(config: &Config, traces: &TraceMap) -> io::Result<()> {
 
         // TODO: Put File Filtering Here
         //
-        write!(&mut handle, "{:.2}% coverage, {}/{} lines covered\n",
+        writeln!(handle, "{:.2}% coverage, {}/{} lines covered",
             cov_percent,
             traces.total_covered(),
             traces.total_coverable()
         )?;
     }
     else {
-        handle.write(b"No Coverage Results Collected\n")?;
+        writeln!(handle, "No Coverage Results Collected")?;
     }
 
     handle.flush()
@@ -49,7 +49,7 @@ pub fn report(config: &Config, traces: &TraceMap) -> io::Result<()> {
 
 
 fn report_verbose(handle: &mut StdoutLock, config: &Config, traces: &TraceMap) -> io::Result<()> {
-    handle.write(b"Uncovered Lines:\n")?;
+    writeln!(handle, "Uncovered Lines:")?;
 
     for (ref key, ref value) in traces.iter() {
         let path = config.strip_project_path(key);
@@ -73,11 +73,11 @@ fn report_verbose(handle: &mut StdoutLock, config: &Config, traces: &TraceMap) -
         let (groups, _) = accumulate_lines((groups, last_group), u64::max_value());
 
         if !groups.is_empty() {
-            write!(handle, "{}: {}\n", path.display(), groups.join(", "))?;
+            writeln!(handle, "{}: {}", path.display(), groups.join(", "))?;
         }
     }
 
-    handle.write(b"\n")?;
+    writeln!(handle, "")?;
     Ok(())
 }
 

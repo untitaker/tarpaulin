@@ -1,39 +1,52 @@
-use std::path::{PathBuf, Path};
 use std::env;
+use std::path::{PathBuf, Path};
+use std::str::{FromStr};
 use std::time::Duration;
-use std::str::FromStr;
+
 use clap::ArgMatches;
 use regex::Regex;
 
 pub use coveralls_api::CiService;
 
 
-arg_enum!{
+arg_enum! {
+
     /// Enum to represent possible output formats.
-    #[derive(Debug)]
-    pub enum OutputFile {
-        Json,
-        Toml,
+    #[derive(Debug, Eq, PartialEq)]
+    pub enum Format {
+        Coveralls,
+        Cobertura,
+        Html,
         Stdout,
-        Xml,
-        Html
     }
 }
+
+impl Default for Format {
+
+    #[inline]
+    fn default() -> Self {
+        Format::Stdout
+    }
+}
+
 
 struct Ci(CiService);
 
 impl FromStr for Ci {
-    type Err = ();
     /// This will never error so no need to implement the error type.
+    ///
+    type Err = ();
+
+    #[inline]
     fn from_str(s: &str) -> Result<Ci, ()> {
         match s {
-            "travis-ci" => Ok(Ci(CiService::Travis)),
-            "travis-pro" => Ok(Ci(CiService::TravisPro)),
-            "circle-ci" => Ok(Ci(CiService::Circle)),
-            "semaphore" => Ok(Ci(CiService::Semaphore)),
-            "jenkins" => Ok(Ci(CiService::Jenkins)),
-            "codeship" => Ok(Ci(CiService::Codeship)),
-            other => Ok(Ci(CiService::Other(other.to_string()))),
+            "circle-ci"     => Ok(Ci(CiService::Circle)),
+            "codeship"      => Ok(Ci(CiService::Codeship)),
+            "jenkins"       => Ok(Ci(CiService::Jenkins)),
+            "semaphore"     => Ok(Ci(CiService::Semaphore)),
+            "travis-ci"     => Ok(Ci(CiService::Travis)),
+            "travis-pro"    => Ok(Ci(CiService::TravisPro)),
+            other           => Ok(Ci(CiService::Other(other.to_string()))),
         }
     }
 }
@@ -60,7 +73,7 @@ pub struct Config {
     /// Flag specifying to run branch coverage
     pub branch_coverage: bool,
     /// Output files to generate
-    pub generate: Vec<OutputFile>,
+    pub generate: Vec<Format>,
     /// Key relating to coveralls service or repo
     pub coveralls: Option<String>,
     /// Enum representing CI tool used.
@@ -136,14 +149,14 @@ impl Config {
             Some(r) => Some(r.to_string()),
             None => None
         };
-        let out:Vec<OutputFile> = values_t!(args.values_of("out"), OutputFile)
+        let out:Vec<Format> = values_t!(args.values_of("format"), Format)
             .unwrap_or_default();
         let features: Vec<String> = Config::get_list_from_args(args, "features");
         let all = args.is_present("all");
         let packages: Vec<String> = Config::get_list_from_args(args, "packages");
         let exclude: Vec<String> = Config::get_list_from_args(args, "exclude");
         let varargs: Vec<String> = Config::get_list_from_args(args, "args");
-        let mut ex_files:Vec<Regex> = vec![]; 
+        let mut ex_files:Vec<Regex> = vec![];
         for temp_str in &Config::get_list_from_args(args, "exclude-files") {
             let s =  &temp_str.replace(".", r"\.").replace("*", ".*");
             if let Ok(re) = Regex::new(s) {
@@ -201,7 +214,7 @@ impl Config {
         self.excluded_files.iter()
                            .any(|x| x.is_match(path.to_str().unwrap_or("")))
     }
-    
+
     /// Strips the directory the project manifest is in from the path. Provides a
     /// nicer path for printing to the user.
     pub fn strip_project_path<'a>(&'a self, path: &'a Path) -> PathBuf {
@@ -274,8 +287,8 @@ mod tests {
         assert!(!conf.exclude_path(Path::new("unrelated.rs")));
         assert!(conf.exclude_path(Path::new("module.rs")));
     }
-    
-    
+
+
     #[test]
     fn no_exclusions() {
         let matches = App::new("tarpaulin")
@@ -289,7 +302,7 @@ mod tests {
         assert!(!conf.exclude_path(Path::new("module.rs")));
     }
 
-    
+
     #[test]
     fn exclude_exact_file() {
         let matches = App::new("tarpaulin")
@@ -317,7 +330,7 @@ mod tests {
 
         let rel_path = path_relative_from(path_b, path_a);
         assert_eq!(rel_path, None, "Did not expect relative path");
-        
+
 
         let path_a = Path::new("./this/should/form/a/rel/path/");
         let path_b = Path::new("./this/should/form/b/rel/path/");

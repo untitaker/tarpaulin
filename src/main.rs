@@ -22,7 +22,7 @@ fn is_dir(d: String) -> Result<(), String> {
     }
 }
 
-const CI_SERVER_HELP: &'static str = 
+const CI_SERVER_HELP: &'static str =
 "Name of service, supported services are:
 travis-ci, travis-pro, circle-ci, semaphore, jenkins and codeship.
 If you are interfacing with coveralls.io or another site you can \
@@ -46,7 +46,7 @@ fn main() {
                  --line -l    'Line coverage'
                  --skip-clean 'Skips the clean stage to reduce build times, may affect coverage results'
                  --branch -b  'Branch coverage: NOT IMPLEMENTED'
-                 --forward -f 'Forwards unexpected signals to test. Tarpaulin will still take signals it is expecting.'
+                 --forward 'Forwards unexpected signals to test. Tarpaulin will still take signals it is expecting.'
                  --coveralls [KEY]  'Coveralls key, either the repo token, or if you're using travis use $TRAVIS_JOB_ID and specify travis-{ci|pro} in --ciserver'
                  --report-uri [URI] 'URI to send report to, only used if the option --coveralls is used'
                  --features [FEATURE]... 'Features to be included in the target project'
@@ -59,8 +59,8 @@ fn main() {
             .args(&[
                 Arg::from_usage("--count 'Counts the number of hits during line coverage'")
                     .conflicts_with("no-count"),
-                Arg::from_usage("--out -o [FMT]   'Output format of coverage report'")
-                    .possible_values(&OutputFile::variants())
+                Arg::from_usage("--format -f [FMT]   'Output format of coverage report'")
+                    .possible_values(&Format::variants())
                     .multiple(true),
                 Arg::from_usage("--root -r [DIR]  'Root directory containing Cargo.toml to use'")
                     .validator(is_dir),

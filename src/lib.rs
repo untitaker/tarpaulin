@@ -30,8 +30,8 @@ use std::ffi::CString;
 use std::io;
 use std::path::Path;
 
-use cargo::ops;
 use cargo::core::{Workspace, Package};
+use cargo::ops;
 use cargo::util::Config as CargoConfig;
 use nix::unistd::*;
 
@@ -45,8 +45,8 @@ pub mod traces;
 /// Should be unnecessary with a future nix crate release.
 mod personality;
 mod ptrace_control;
-mod statemachine;
 mod source_analysis;
+mod statemachine;
 
 
 use config::*;
@@ -59,6 +59,7 @@ use traces::*;
 pub fn run(config: &Config) -> Result<(), i32> {
     let (result, tp) = launch_tarpaulin(&config)?;
     report_coverage(&config, &result);
+
     if tp {
         Ok(())
     } else {
@@ -157,16 +158,14 @@ fn setup_environment() {
 
 /// Reports the test coverage using the users preferred method. See config.rs
 /// or help text for details.
+///
 pub fn report_coverage(config: &Config, result: &TraceMap) {
-    reporting::stdout::report(config, result);
-
-    if !result.is_empty() {
-        for g in &config.generate {
-            match *g {
-                OutputFile::Xml     => println!("Render XML"),
-                OutputFile::Html    => println!("Render HTML"),
-                _                   => println!("Render Unsupported Type")
-            }
+    for format in &config.generate {
+        match *format {
+            Format::Cobertura   => println!("Render Cobertura"),
+            Format::Coveralls   => println!("Render Coveralls"),
+            Format::Html        => println!("Render HTML"),
+            Format::Stdout      => reporting::stdout::report(config, result).unwrap(),
         }
     }
 }
