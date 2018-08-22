@@ -41,7 +41,7 @@ fn main() {
                  "--verbose -v 'Show extra output'
                  --ignore-tests 'ignore lines of test functions when collecting coverage'
                  --ignore-panics 'ignore panic macros in tests'
-                 --no-count   'Disables counting line hits for a faster run (default)'
+                 --count   'Counts the number of hits during coverage'
                  --ignored -i 'Run ignored tests as well'
                  --line -l    'Line coverage'
                  --skip-clean 'Skips the clean stage to reduce build times, may affect coverage results'
@@ -57,8 +57,6 @@ fn main() {
                  --exclude-files [FILE]... 'Exclude given files from coverage results has * wildcard'
                  --timeout -t [SECONDS] 'Integer for the maximum time in seconds without response from test before timeout (default is 1 minute).'")
             .args(&[
-                Arg::from_usage("--count 'Counts the number of hits during line coverage'")
-                    .conflicts_with("no-count"),
                 Arg::from_usage("--format -f [FMT]   'Output format of coverage report'")
                     .possible_values(&Format::variants())
                     .multiple(true),
@@ -74,7 +72,7 @@ fn main() {
         .get_matches();
 
     let args = args.subcommand_matches("tarpaulin").unwrap_or(&args);
-    let config = Config::from_args(args);
+    let config = Config::from(args);
     match run(&config) {
         Ok(()) => println!("Tarpaulin finished"),
         Err(e) => {
