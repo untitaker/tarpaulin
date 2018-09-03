@@ -4,12 +4,12 @@ use std::path::Path;
 use std::io::prelude::*;
 use std::io::Cursor;
 use std::collections::HashSet;
+use uuid::Uuid;
 use quick_xml::Writer;
 use quick_xml::events::{Event, BytesEnd, BytesStart, BytesDecl};
 use quick_xml::Result;
 use traces::{TraceMap, CoverageStat};
 use config::Config;
-
 
 
 fn write_header<T:Write>(writer: &mut Writer<T>, config: &Config) -> Result<usize> {
@@ -99,7 +99,7 @@ fn write_package<T:Write>(mut writer: &mut Writer<T>,
 }
 
 pub fn export(coverage_data: &TraceMap, config: &Config) {
-    let mut file = File::create("cobertura.xml").unwrap();
+    let mut file = File::create(format!("cobertura-{}.xml", Uuid::new_v4())).unwrap();
     let mut writer = Writer::new(Cursor::new(Vec::new()));    
     writer.write_event(Event::Decl(BytesDecl::new(b"1.0", None, None))).unwrap();
     // Construct cobertura xml 

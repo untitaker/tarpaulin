@@ -31,3 +31,4 @@ lazy_static = "1.0"
 syn = { version = "0.14.4", features = ["full"]}
 proc-macro2 = "0.4.6"
 walkdir = "2"
+uuid = { version = "0.6", features = ["v4"] }
