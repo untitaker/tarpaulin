@@ -75,89 +75,73 @@ pub fn launch_tarpaulin(config: &Config) -> Result<(TraceMap, bool), i32> {
     
     setup_environment();
 
-    let mut copt = if config.binary.is_none() {
-        ops::CompileOptions::default(&cargo_config, ops::CompileMode::Test)
-    } else {
-        ops::CompileOptions::default(&cargo_config, ops::CompileMode::Build)
-    };
+    let mut result = TraceMap::new();
+    let mut test_passed = true;
 
-    if let ops::CompileFilter::Default{ref mut required_features_filterable} = copt.filter {
-        *required_features_filterable = true;
-    }
-
-    copt.features = config.features.as_slice();
-    copt.all_features = config.all_features;
-    copt.spec = match ops::Packages::from_flags(workspace.is_virtual(), config.all, &config.exclude, &config.packages) {
-        Ok(spec) => spec,
-        Err(e) => { 
-            println!("Error getting Packages from workspace {}", e);
-            return Err(-1)
-        }
-    };
     if config.verbose {
         println!("Running Tarpaulin");
     }
-    if !config.skip_clean {
-        if config.verbose {
-            println!("Cleaning project");
+
+    if let Some(ref binary) = config.binary.as_ref() {
+        if let Some((res, tp)) = get_test_coverage(&workspace, None, binary.as_path(), &config, false) {
+            result.merge(&res);
+            test_passed &= tp;
         }
-        // Clean isn't expected to fail and if it does it likely won't have an effect
-        let clean_opt = ops::CleanOptions {
-            config: &cargo_config,
-            spec: &[],
-            target: None,
-            release: false,
-        };
-        let _ = ops::clean(&workspace, &clean_opt);
-    }
-    let mut result = TraceMap::new();
-    println!("Building project");
-    let compilation = ops::compile(&workspace, &copt);
-    let mut test_passed = true;
-    match compilation {
-        Ok(comp) => {
-            if let Some(ref binary) = config.binary.as_ref() {
-                for ref path in &comp.binaries {
-                    if path.file_stem().map(|x| x == &binary[..]).unwrap_or(false) {
-                        continue;
-                    }
+    } else {
+        let mut copt = ops::CompileOptions::default(&cargo_config, ops::CompileMode::Test);
 
-                    if config.verbose {
-                        println!("Processing {}", binary);
-                    }
+        if let ops::CompileFilter::Default{ref mut required_features_filterable} = copt.filter {
+            *required_features_filterable = true;
+        }
 
-                    if let Some((res, tp)) = get_test_coverage(&workspace, None, path, &config, false) {
-                        result.merge(&res);
-                        test_passed &= tp;
-                    }
-                }
-            } else {
-                for &(ref package, ref _target_kind, ref name, ref path) in &comp.tests {
-                    if config.verbose {
-                        println!("Processing {}", name);
-                    }
-                    if let Some((res, tp)) = get_test_coverage(&workspace, Some(package), path.as_path(), &config, false) {
-                        result.merge(&res);
-                        test_passed &= tp;
-                    }
-                    if config.run_ignored {
-                        if let Some((res, tp)) = get_test_coverage(&workspace, Some(package), path.as_path(), &config, true) {
-                            result.merge(&res);
-                            test_passed &= tp;
-                        }
-                    }
-                }
-                result.dedup();
+        copt.features = config.features.as_slice();
+        copt.all_features = config.all_features;
+        copt.spec = match ops::Packages::from_flags(workspace.is_virtual(), config.all, &config.exclude, &config.packages) {
+            Ok(spec) => spec,
+            Err(e) => { 
+                println!("Error getting Packages from workspace {}", e);
+                return Err(-1)
             }
-            Ok((result, test_passed))
-        },
-        Err(e) => {
+        };
+        if !config.skip_clean {
+            if config.verbose {
+                println!("Cleaning project");
+            }
+            // Clean isn't expected to fail and if it does it likely won't have an effect
+            let clean_opt = ops::CleanOptions {
+                config: &cargo_config,
+                spec: &[],
+                target: None,
+                release: false,
+            };
+            let _ = ops::clean(&workspace, &clean_opt);
+        }
+        println!("Building project");
+        let compilation = ops::compile(&workspace, &copt).map_err(|e| {
             if config.verbose{
                 println!("Error: failed to compile: {}", e);
             }
-            Err(-1)
-        },
+            -1
+        })?;
+
+        for &(ref package, ref _target_kind, ref name, ref path) in &compilation.tests {
+            if config.verbose {
+                println!("Processing {}", name);
+            }
+            if let Some((res, tp)) = get_test_coverage(&workspace, Some(package), path.as_path(), &config, false) {
+                result.merge(&res);
+                test_passed &= tp;
+            }
+            if config.run_ignored {
+                if let Some((res, tp)) = get_test_coverage(&workspace, Some(package), path.as_path(), &config, true) {
+                    result.merge(&res);
+                    test_passed &= tp;
+                }
+            }
+        }
     }
+    result.dedup();
+    Ok((result, test_passed))
 }
 
 

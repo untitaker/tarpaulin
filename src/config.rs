@@ -86,7 +86,7 @@ pub struct Config {
     /// Duration to wait before a timeout occurs
     pub test_timeout: Duration,
     /// Test binary to run
-    pub binary: Option<String>,
+    pub binary: Option<PathBuf>,
 }
 
 impl Config {
@@ -164,7 +164,11 @@ impl Config {
             60u64
         };
 
-        let binary = args.value_of("binary").map(|x| x.to_owned());
+        let binary = args.value_of("binary").map(|path| {
+            let mut pathbuf = env::current_dir().unwrap();
+            pathbuf.push(path);
+            pathbuf
+        });
 
         Config{
             manifest: root,
